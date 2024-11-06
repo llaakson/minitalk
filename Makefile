@@ -18,20 +18,17 @@ INCLUDES = -I ./libft
 
 LIBFT_FLAGS = -L ./libft -lft
 
-all: LIBFT $(NAME)
+all: $(LIBFT) $(NAME)
 
-LIBFT:
+$(LIBFT):
 	make -C libft
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCLUDES)
- 
-NAME: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
 
 server: $(NAMES)
 
-$(NAMES): $(SOBJECTS)
+$(NAME): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
 
 clean:

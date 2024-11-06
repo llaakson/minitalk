@@ -6,13 +6,26 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/05 19:03:58 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/06 18:08:19 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
+#include "libft/libft.h"
 
 static int wait;
+
+int	send_argument_size(char *argv, int id)
+{
+	int i;
+	char *lenstr; 
+	
+	i = ft_strlen(argv);
+	lenstr = ft_itoa(i); // check malloc fail
+	printf("n: %d s: %s\n",i,lenstr);
+	convert_binary(lenstr,id);
+	return (0);
+}
 
 int convert_binary(char *argv, int id)
 {
@@ -73,6 +86,9 @@ int	main(int argc, char **argv)
 	wait = 0;
 	(void)argc;
 	sigaction(SIGUSR2, &siga, NULL);
+	send_argument_size(argv[2],id);
+	write(1, "\n", 1);
+	sleep(1);
 	convert_binary(argv[2], id);
 	return (0);
 }
