@@ -26,6 +26,9 @@ $(LIBFT):
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCLUDES)
 
+$(NAMES): $(SOBJECTS)
+		$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
+
 server: $(NAMES)
 
 $(NAME): $(OBJECTS)

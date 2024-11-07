@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/06 18:08:19 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/07 17:44:39 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,37 @@ static int wait;
 int	send_argument_size(char *argv, int id)
 {
 	int i;
-	char *lenstr; 
+	//char *lenstr; 
+	int send = 32;
+	int bit = 0;
+	int wait_counter = 0;
 	
 	i = ft_strlen(argv);
-	lenstr = ft_itoa(i); // check malloc fail
-	printf("n: %d s: %s\n",i,lenstr);
-	convert_binary(lenstr,id);
+	while (send--)
+	{
+		bit = (i >> send) & 1;
+		if (bit == 0)
+			kill(id,SIGUSR2);
+		if (bit == 1)
+			kill(id,SIGUSR1);
+		while (wait == 0)
+		{	
+			usleep(100000);
+			if (wait_counter == 50)
+			{
+				write (1, "faiLL\n", 6);
+				exit (1);
+			}
+			wait_counter++;
+		}
+		wait = 0;
+		wait_counter = 0;
+		printf("%d", bit);
+	}
+	printf("\n32 should have been send by now \n\n");
+	//lenstr = ft_itoa(i); // check malloc fail
+	//printf("n: %d s: %s\n",i,lenstr);
+	//convert_binary(lenstr,id);
 	return (0);
 }
 
