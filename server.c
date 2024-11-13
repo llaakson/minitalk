@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 16:11:55 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/13 18:57:45 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/13 22:41:48 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ void print_char(int *str_size, char print_bit,int *bit_counter,int *int_count)
 	}
 	//printf("\nHERE\n");
 	print_str[i++] = print_bit;
-	if (print_bit == 'A')
+	if (print_bit == '\0')
 	{
 		printf("%s\n",print_str);
 		free(print_str);

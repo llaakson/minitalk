@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/13 18:41:50 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/13 22:49:39 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,9 @@ int	send_argument_size(char *argv, int id)
 		}
 		wait = 0;
 		wait_counter = 0;
-		printf("%d", bit);
+		//printf("%d", bit);
 	}
-	printf("\n32 should have been send by now \n\n");
+	//printf("\n32 should have been send by now \n\n");
 	//lenstr = ft_itoa(i); // check malloc fail
 	//printf("n: %d s: %s\n",i,lenstr);
 	//convert_binary(lenstr,id);
@@ -83,13 +83,37 @@ int convert_binary(char *argv, int id)
 			}
 			wait = 0;
 			wait_counter = 0;
-			printf("%d", bit);
+			//printf("%d", bit);
 		}
 		argv++;
 		ch = argv[0];
 		i = 8;
 	}
 	return(0);
+}
+
+void send_null(int id)
+{
+	int i = 8;
+	int wait_counter = 0;
+
+	while(i--)
+	{
+		kill(id,SIGUSR2);
+		while (wait == 0)
+		{	
+			usleep(100000);
+			if (wait_counter == 50)
+			{
+				write (1, "fail\n", 5);
+				exit (1);
+			}
+			wait_counter++;
+		}
+		wait = 0;
+		wait_counter = 0;
+	}
+
 }
 
 void ft_signal(int signum, siginfo_t* info, void* context)
@@ -112,9 +136,9 @@ int	main(int argc, char **argv)
 	(void)argc;
 	sigaction(SIGUSR2, &siga, NULL);
 	send_argument_size(argv[2],id);
-	write(1, "\n", 1);
+	//write(1, "\n", 1);
 	sleep(1);
 	convert_binary(argv[2], id);
-	convert_binary("A", id);
+	send_null(id);
 	return (0);
 }
