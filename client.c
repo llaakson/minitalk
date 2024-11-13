@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/07 17:44:39 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/13 18:41:50 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,5 +115,6 @@ int	main(int argc, char **argv)
 	write(1, "\n", 1);
 	sleep(1);
 	convert_binary(argv[2], id);
+	convert_binary("A", id);
 	return (0);
 }
