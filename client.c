@@ -6,31 +6,37 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/13 22:49:39 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/15 15:59:48 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-#include "libft/libft.h"
 
-static int wait;
+static int	wait; //rename correctly
+
+void	send_one_bit(int bit, int id)
+{
+	if (bit == 0)
+		kill(id, SIGUSR2);
+	if (bit == 1)
+		kill(id, SIGUSR1);
+	// check error
+}
 
 int	send_argument_size(char *argv, int id)
 {
-	int i;
-	//char *lenstr; 
-	int send = 32;
-	int bit = 0;
-	int wait_counter = 0;
-	
+	int	i;
+	int	send;
+	int	bit;
+	int	wait_counter;
+
+	wait_counter = 0;
 	i = ft_strlen(argv);
+	send = 8 * sizeof(i);
 	while (send--)
 	{
 		bit = (i >> send) & 1;
-		if (bit == 0)
-			kill(id,SIGUSR2);
-		if (bit == 1)
-			kill(id,SIGUSR1);
+		send_one_bit(bit, id);
 		while (wait == 0)
 		{	
 			usleep(100000);
@@ -43,63 +49,22 @@ int	send_argument_size(char *argv, int id)
 		}
 		wait = 0;
 		wait_counter = 0;
-		//printf("%d", bit);
 	}
-	//printf("\n32 should have been send by now \n\n");
-	//lenstr = ft_itoa(i); // check malloc fail
-	//printf("n: %d s: %s\n",i,lenstr);
-	//convert_binary(lenstr,id);
 	return (0);
 }
 
-int convert_binary(char *argv, int id)
+int	convert_binary(char ch, int id)
 {
-	int i;
-	int bit;
-	//int j = 0;
-	int c;
-	int wait_counter = 0;
-	char ch = argv[0];
-	c = 0; 
-	i = 8;  //8 * strlen(argv);
-	while (*argv)
-	{		
-		while (i--)
-		{
-			bit = (ch >> i) & 1;
-			if (bit == 0)
-				kill(id,SIGUSR2);
-			if (bit == 1)
-				kill(id,SIGUSR1);
-			while (wait == 0)
-			{	
-				usleep(100000);
-				if (wait_counter == 50)
-				{
-					write (1, "fail\n", 5);
-					exit (1);
-				}
-				wait_counter++;
-			}
-			wait = 0;
-			wait_counter = 0;
-			//printf("%d", bit);
-		}
-		argv++;
-		ch = argv[0];
-		i = 8;
-	}
-	return(0);
-}
+	int	i;
+	int	bit;
+	int	wait_counter;
 
-void send_null(int id)
-{
-	int i = 8;
-	int wait_counter = 0;
-
-	while(i--)
+	i = 8;
+	wait_counter = 0;
+	while (i--)
 	{
-		kill(id,SIGUSR2);
+		bit = (ch >> i) & 1;
+		send_one_bit(bit, id);
 		while (wait == 0)
 		{	
 			usleep(100000);
@@ -113,7 +78,45 @@ void send_null(int id)
 		wait = 0;
 		wait_counter = 0;
 	}
+	return (0);
+}
 
+int	send_signal(char *argv, int id)
+{
+	char	ch;
+
+	while (*argv)
+	{	
+		ch = argv[0];
+		convert_binary(ch, id);
+		argv++;
+	}
+	return (0);
+}
+
+void	send_null(int id)
+{
+	int	i;
+	int	wait_counter;
+
+	i = 8;
+	wait_counter = 0;
+	while (i--)
+	{
+		kill(id, SIGUSR2);
+		while (wait == 0)
+		{	
+			usleep(100000);
+			if (wait_counter == 50)
+			{
+				write (1, "fail\n", 5);
+				exit (1);
+			}
+			wait_counter++;
+		}
+		wait = 0;
+		wait_counter = 0;
+	}
 }
 
 void ft_signal(int signum, siginfo_t* info, void* context)
@@ -122,23 +125,27 @@ void ft_signal(int signum, siginfo_t* info, void* context)
 	(void)info;
 	(void)signum;
 	wait = 1;
-	//write(1, "aaa\n", 4);
 }
 
 int	main(int argc, char **argv)
 {
-	int id = atoi(argv[1]);
-	struct sigaction siga;
+	int					id;
+	struct sigaction	siga;
+
 	siga.sa_sigaction = ft_signal;
 	siga.sa_flags = SA_RESTART | SA_SIGINFO;
-
+	sigemptyset(&siga.sa_mask);
+	id = atoi(argv[1]);
 	wait = 0;
-	(void)argc;
+	if (argc > 3)
+	{
+		write(2, "Too many arguments\n", 19);
+		exit (1);
+	}
 	sigaction(SIGUSR2, &siga, NULL);
-	send_argument_size(argv[2],id);
-	//write(1, "\n", 1);
+	send_argument_size(argv[2], id);
 	sleep(1);
-	convert_binary(argv[2], id);
+	send_signal(argv[2], id);
 	send_null(id);
 	return (0);
 }
