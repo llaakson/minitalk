@@ -1,6 +1,8 @@
-NAME = client
+CLIENT = client
 
-MAMES = server
+SERVER = server
+
+NAME = $(CLIENT) $(SERVER) 
 
 SOURCES =	client.c\
 
@@ -18,7 +20,7 @@ INCLUDES = -I ./libft
 
 LIBFT_FLAGS = -L ./libft -lft
 
-all: $(LIBFT) $(NAME) $(NAMES)
+all: $(LIBFT) $(NAME)
 
 $(LIBFT):
 	make -C libft
@@ -26,11 +28,12 @@ $(LIBFT):
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCLUDES)
 
-$(NAMES): $(SOBJECTS)
-		$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
-
-$(NAME): $(OBJECTS)
+$(CLIENT): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
+
+$(SERVER): $(SOBJECTS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBFT_FLAGS)
+
 
 clean:
 	make clean -C libft

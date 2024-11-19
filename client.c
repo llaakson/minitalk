@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/15 15:59:48 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/18 15:47:20 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,7 @@ void	send_null(int id)
 	}
 }
 
-void ft_signal(int signum, siginfo_t* info, void* context)
+void ft_signal(int signum, siginfo_t* info, void *context)
 {
 	(void)context;
 	(void)info;
@@ -137,9 +137,9 @@ int	main(int argc, char **argv)
 	sigemptyset(&siga.sa_mask);
 	id = atoi(argv[1]);
 	wait = 0;
-	if (argc > 3)
+	if (argc != 3)
 	{
-		write(2, "Too many arguments\n", 19);
+		write(2, "Too many/few arguments\n", 23);
 		exit (1);
 	}
 	sigaction(SIGUSR2, &siga, NULL);
