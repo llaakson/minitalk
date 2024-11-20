@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/04 16:11:55 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/19 00:07:12 by llaakson         ###   ########.fr       */
+/*   Created: 2024/11/19 21:21:54 by llaakson          #+#    #+#             */
+/*   Updated: 2024/11/20 17:23:46 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,134 +17,100 @@
 # include <string.h>
 # include "libft/libft.h"
 
-static int wait = 0; //make it global
+int s_signal;
+int spid;
 
-
-int	print_char(int *str_size, char print_bit, int *bit_counter, int *int_count, int *current_pid)
-{	
-	static char	*print_str;
-	static int	check = 1;
-	static int	i = 0;
-
-	if (check == 1)
-	{
-		print_str = malloc(sizeof(char) * (*str_size + 1));
-		check = 0;
-	}
-	print_str[i++] = print_bit;
-	if (print_bit == '\0')
-	{
-		ft_printf("%s\n", print_str);
-		free(print_str);
-		print_str = NULL;
-		check = 1;
-		i = 0;
-		*str_size = 0;
-		*bit_counter = 8;
-		print_bit = '0'; //reduntant ??
-		*int_count = 0;
-		*current_pid = 0;
-		wait = 0;
+int ft_get_bit(unsigned char *bit)
+{
+	int i;
+	
+	if (spid == 0)
 		return (0);
+	i = 8;
+	while (i--)
+	{
+		if (s_signal == SIGUSR2)
+		{
+			*bit <<= 1;
+			//write(1, "0",1);
+		}
+		else if (s_signal == SIGUSR1)
+		{
+			//*bit |= 1 << (7 - i);
+			*bit = (*bit << 1) | 1;
+			//write(1, "1",1);
+		}
+		//i++;
+		kill(spid, SIGUSR2);
+		usleep(10000);
 	}
-	*bit_counter = 8;
-	return (1);
+	//write(1,"\n",1);
+	return (0);	
 }
 
-void ft_clean(int *str_size, char print_bit, int *bit_counter, int *int_count, int *current_pid)
+void *ft_message_length(void *str_size, int counter)
 {
-		*str_size = 0;
-		*bit_counter = 7;
-		print_bit = '0'; //reduntant ??
-		*int_count = 0;
-		*current_pid = 0;
-		wait = 0;
+	int i;
+	unsigned char	*temp;
+	//ft_printf("counter %d\n", counter);	
+	temp = (unsigned char *)str_size;
+	i = 0;
+	if (spid == 0)
+		return (0);
+	while (counter--)
+	{
+		ft_get_bit(&temp[counter]);
+		i++;
+	}
+	return (str_size);	
 }
-void	do_everything(int signum, int pid)
-{
-	static int	str_size = 0;
-	static int	bit_counter = 7;
-	static char	print_bit = '0';
-	static int	int_count = 0;
-	static int current_pid = 0;
-	//int wait_counter = 0;
 
-	if (getpid() == pid)
+void	ft_print_message(int str_size)
+{
+	char *str;
+	
+	ft_printf("\nMessage size is %d   \n", str_size);
+	//write(1,"malloc\n",7);
+	str = malloc(str_size + 1);
+	int i = 0;
+	while (str_size)
 	{
-		write(1, "clean\n",6);
-		ft_clean(&str_size, print_bit, &bit_counter, &int_count, &current_pid);
-		wait = 0;
-		return ;
+		ft_message_length(str+i,1);
+		i++;
+		str_size--;
 	}
-	if (current_pid == 0)
-		current_pid = pid;
-	if (pid == current_pid)
-	{
-		if (signum == SIGUSR2)
-		{
-			if (int_count++ < 32)
-				str_size <<= 1;
-			print_bit <<= 1;
-		}
-		else if (signum == SIGUSR1)
-		{
-			if (int_count++ < 32)
-				str_size = (str_size << 1) | 1;
-			print_bit = (print_bit << 1) | 1;
-		}
-		if (int_count > 32)
-		{
-			if (bit_counter == 0)
-				if(!(print_char(&str_size, print_bit, &bit_counter, &int_count, &current_pid)))
-				{
-					bit_counter -= 1;
-					kill(pid,SIGUSR2);
-					return ;
-				}
-			bit_counter -= 1;
-		}
-		printf("%d\n",int_count);
-		kill(pid, SIGUSR2);
-		/*while (wait == 0)
-		{
-			//kill(pid, SIGUSR2);	
-			usleep(100000);
-			if (wait_counter == 50)
-			{
-				write (1, "fail\n", 5);
-			}
-			wait_counter++;
-		}*/
-		wait = 0;
-	}
+	ft_printf("%s\n", str);
+	free (str);
+	spid = 0;
 }
 
 void	ft_print_signal(int signum, siginfo_t *info, void* context)
 {
 	(void)context;
-	//write(1,"Handler\n", 8);
-	do_everything(signum,info->si_pid);
+	spid = info->si_pid;
+	s_signal = signum;
 }
 
 int	main(void)
 {
 	struct sigaction	siga;
-	int					pid;
+	int str_size = 0;
+	void	*str_size_ptr;
 
 	siga.sa_sigaction = ft_print_signal;
 	siga.sa_flags = SA_SIGINFO;
 	sigemptyset(&siga.sa_mask);
-	sigaction(SIGUSR1, &siga, NULL);
+	sigaction(SIGUSR1, &siga, NULL); // check these
 	sigaction(SIGUSR2, &siga, NULL);
-	pid = getpid();
-	ft_printf("%d\n", pid);
+	ft_printf("%d\n", getpid());
 	while (1)
 	{
-		sleep (1);
-		printf("wait %d\n",wait);
-		if (wait == 1)
-			kill(getpid(),SIGUSR2);
-		wait = 1;
+		//spid = 0;
+		str_size = 0;
+		str_size_ptr = ft_message_length(&str_size, sizeof(int));
+		if (str_size_ptr && str_size > 0)
+			ft_print_message(str_size);
 	}
 	return (0);
 }
+
