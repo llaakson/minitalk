@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/18 15:47:20 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/20 16:48:53 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,15 @@ static int	wait; //rename correctly
 void	send_one_bit(int bit, int id)
 {
 	if (bit == 0)
+	{
 		kill(id, SIGUSR2);
+		//write(1,"0",1);
+	}
 	if (bit == 1)
+	{
 		kill(id, SIGUSR1);
+		//write(1,"1",1);
+	}
 	// check error
 }
 
@@ -146,6 +152,6 @@ int	main(int argc, char **argv)
 	send_argument_size(argv[2], id);
 	sleep(1);
 	send_signal(argv[2], id);
-	send_null(id);
+	//send_null(id);
 	return (0);
 }
