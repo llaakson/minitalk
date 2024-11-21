@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/20 16:48:53 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/21 23:16:46 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,100 +29,45 @@ void	send_one_bit(int bit, int id)
 	// check error
 }
 
-int	send_argument_size(char *argv, int id)
+int send_one_byte(int pid, unsigned char byte)
 {
-	int	i;
-	int	send;
-	int	bit;
-	int	wait_counter;
+	int i;
+	int bit;
 
-	wait_counter = 0;
-	i = ft_strlen(argv);
-	send = 8 * sizeof(i);
-	while (send--)
+	i = 0;
+	while (i < 8)
 	{
-		bit = (i >> send) & 1;
-		send_one_bit(bit, id);
-		while (wait == 0)
-		{	
-			usleep(100000);
-			if (wait_counter == 50)
-			{
-				write (1, "faiLL\n", 6);
-				exit (1);
-			}
-			wait_counter++;
-		}
 		wait = 0;
-		wait_counter = 0;
+		bit = byte >> (7 - i) & 1;
+		send_one_bit(bit, pid);
+		while (!wait)
+		{
+			usleep(100000);
+			if(!wait)
+			{
+				write(2, "Time out\n", 9);
+				return (0);
+			}
+		}
+		i++;
 	}
+	//write(1,"\n", 1);
 	return (0);
 }
-
-int	convert_binary(char ch, int id)
+		
+int	start_send(int pid, void *send, int size)
 {
-	int	i;
-	int	bit;
-	int	wait_counter;
+	int i;
+	unsigned char *byte;
 
-	i = 8;
-	wait_counter = 0;
-	while (i--)
+	byte = (unsigned char *)send;
+	i = 0;
+	while (i < size)
 	{
-		bit = (ch >> i) & 1;
-		send_one_bit(bit, id);
-		while (wait == 0)
-		{	
-			usleep(100000);
-			if (wait_counter == 50)
-			{
-				write (1, "fail\n", 5);
-				exit (1);
-			}
-			wait_counter++;
-		}
-		wait = 0;
-		wait_counter = 0;
+		send_one_byte(pid,byte[i]);
+		i++;
 	}
 	return (0);
-}
-
-int	send_signal(char *argv, int id)
-{
-	char	ch;
-
-	while (*argv)
-	{	
-		ch = argv[0];
-		convert_binary(ch, id);
-		argv++;
-	}
-	return (0);
-}
-
-void	send_null(int id)
-{
-	int	i;
-	int	wait_counter;
-
-	i = 8;
-	wait_counter = 0;
-	while (i--)
-	{
-		kill(id, SIGUSR2);
-		while (wait == 0)
-		{	
-			usleep(100000);
-			if (wait_counter == 50)
-			{
-				write (1, "fail\n", 5);
-				exit (1);
-			}
-			wait_counter++;
-		}
-		wait = 0;
-		wait_counter = 0;
-	}
 }
 
 void ft_signal(int signum, siginfo_t* info, void *context)
@@ -137,21 +82,21 @@ int	main(int argc, char **argv)
 {
 	int					id;
 	struct sigaction	siga;
+	int	str_len;
 
 	siga.sa_sigaction = ft_signal;
 	siga.sa_flags = SA_RESTART | SA_SIGINFO;
 	sigemptyset(&siga.sa_mask);
 	id = atoi(argv[1]);
-	wait = 0;
+	//wait = 0;
 	if (argc != 3)
 	{
 		write(2, "Too many/few arguments\n", 23);
 		exit (1);
 	}
 	sigaction(SIGUSR2, &siga, NULL);
-	send_argument_size(argv[2], id);
-	sleep(1);
-	send_signal(argv[2], id);
-	//send_null(id);
+	str_len = ft_strlen(argv[2]);
+	start_send(id, &str_len, sizeof(str_len));
+	start_send(id, argv[2], str_len);
 	return (0);
 }
