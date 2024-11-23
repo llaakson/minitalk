@@ -33,34 +33,24 @@ int ft_get_bit(unsigned char *bit, int static_pid)
 		{
 			usleep(100000);
 			if (!s_signal)
-				return(0);
+				return (0);
 		}
 		if (s_signal == SIGUSR1)
-		{
 			*bit |= 1 << (7 - i);
-			//write(1, "1",1);
-		}
-		//else
-		//	write(1, "0", 1);
 		i++;
 		s_signal = 0;
-		kill(spid, SIGUSR2);
+		if (kill(spid, SIGUSR2) == -1)
+			write(2, "Error sending signal\n", 21);
 	}
 	//write(1,"\n",1);
 	return (1);	
 }
 
-void	set_pid(int static_pid)
-{
-	static_pid = abs(spid);
-}
 void *ft_message_length(void *str_size, int counter, int static_pid)
 {
 	unsigned char	*temp;
 	int i;
 	
-	if (static_pid == 0)
-		set_pid(static_pid);
 	ft_bzero(str_size,counter);
 	temp = (unsigned char *)str_size;
 	i = 0;
@@ -78,10 +68,18 @@ void	ft_print_message(int str_size,int static_pid)
 	char *str;
 	
 	//ft_printf("\nMessage size is %d   \n", str_size);
-	usleep(1000);
 	str = malloc(str_size + 1);
-	
-	ft_message_length(str, str_size, static_pid);
+	if (!str)
+	{
+		write(2, "Failed to allocate memory\n", 26);
+		return ;
+	}
+	if(!(ft_message_length(str, str_size, static_pid)));
+	{
+		free(str);
+		write(2, "Signal lost\n", 12);
+		return ;
+	}
 	str[str_size] = '\0';
 	ft_printf("%s\n", str);
 	free (str);

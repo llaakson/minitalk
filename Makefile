@@ -37,7 +37,7 @@ $(SERVER): $(SOBJECTS)
 
 clean:
 	make clean -C libft
-	rm -f $(OBJECTS)
+	rm -f $(OBJECTS) $(SOBJECTS)
 
 fclean: clean
 	rm -f $(NAME)
