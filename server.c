@@ -6,105 +6,106 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/19 21:21:54 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/21 23:25:22 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/24 08:58:57 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include <stdio.h>
-# include <unistd.h>
-# include <stdlib.h>
-# include <signal.h>
-# include <string.h>
-# include "libft/libft.h"
+#include "minitalk_server.h"
 
-static int s_signal;
-static int spid;
+static int	g_signal;
 
-int ft_get_bit(unsigned char *bit, int static_pid)
+int	set_pid(int spid)
 {
-	int i;
-	
-	i = 0;
-	static_pid = 0;
-	//printf("static pid %d spid %d \n", static_pid, spid);
-	while (8 > i)
-	{
-		while (!s_signal)
-		{
-			usleep(100000);
-			if (!s_signal)
-				return (0);
-		}
-		if (s_signal == SIGUSR1)
-			*bit |= 1 << (7 - i);
-		i++;
-		s_signal = 0;
-		if (kill(spid, SIGUSR2) == -1)
-			write(2, "Error sending signal\n", 21);
-	}
-	//write(1,"\n",1);
-	return (1);	
+	static int	static_pid = 0;
+
+	if (spid == -1)
+		return (static_pid);
+	if (static_pid == 0 || spid == 0)
+		static_pid = spid;
+	if (static_pid == spid)
+		return (0);
+	if (static_pid != spid)
+		return (-1);
+	return (static_pid);
 }
 
-void *ft_message_length(void *str_size, int counter, int static_pid)
+int	ft_get_bit(unsigned char *bit)
+{
+	int	i;
+	unsigned char temp_bit;
+
+	i = 0;
+	&temp_bit = bit;
+	while (8 > i)
+	{
+		while (!g_signal)
+		{
+			sleep(60);
+			if (!g_signal)
+				return (0);
+		}
+		if (g_signal == SIGUSR1)
+			temp_bit |= 1 << (7 - i);
+		i++;
+		g_signal = 0;
+		kill(set_pid(-1), SIGUSR2);
+	}
+	return (1);
+}
+
+bool	ft_message_length(void *str_size, int counter)
 {
 	unsigned char	*temp;
-	int i;
-	
-	ft_bzero(str_size,counter);
+	int				i;
+
+	ft_bzero(str_size, counter);
 	temp = (unsigned char *)str_size;
 	i = 0;
 	while (i < counter)
 	{
-		if (!(ft_get_bit(&temp[i],static_pid)))
-			return (NULL);
+		if (!(ft_get_bit(&temp[i])))
+			return (false);
 		i++;
 	}
-	return (str_size);	
+	return (true);
 }
 
-void	ft_print_message(int str_size,int static_pid)
+void	ft_print_message(int str_size)
 {
-	char *str;
-	
-	//ft_printf("\nMessage size is %d   \n", str_size);
+	char	*str;
+
 	str = malloc(str_size + 1);
 	if (!str)
 	{
 		write(2, "Failed to allocate memory\n", 26);
 		return ;
 	}
-	if(!(ft_message_length(str, str_size, static_pid)));
+	if (ft_message_length(str, str_size) == false)
 	{
 		free(str);
+		str = NULL;
 		write(2, "Signal lost\n", 12);
+		kill(set_pid(-1), SIGUSR1);
 		return ;
 	}
 	str[str_size] = '\0';
 	ft_printf("%s\n", str);
 	free (str);
+	str = NULL;
 }
 
-void	ft_print_signal(int signum, siginfo_t *info, void* context)
+void	ft_print_signal(int signum, siginfo_t *info, void *context)
 {
 	(void)context;
-
-	if (spid == 0)
-		spid = info->si_pid;
-	if (spid == info->si_pid)
-		s_signal = signum;
-	//if (signum == SIGUSR2)
-	//	s_signal *= -1;
-	//if (signum == SIGUSR1)
-	//	spid = info->si_pid;
+	if (!(set_pid(info->si_pid)))
+		g_signal = signum;
 }
 
 int	main(void)
 {
 	struct sigaction	siga;
-	int str_size = 0;
-	void	*str_size_ptr;
-	static int static_pid;
+	int					str_size;
+	bool				str_size_ptr;
 
 	siga.sa_sigaction = ft_print_signal;
 	siga.sa_flags = SA_SIGINFO;
@@ -114,13 +115,11 @@ int	main(void)
 	ft_printf("%d\n", getpid());
 	while (1)
 	{
-		static_pid = 0;
-		spid = 0;
+		set_pid(0);
 		str_size = 0;
-		str_size_ptr = ft_message_length(&str_size, sizeof(int),static_pid);
-		if (str_size_ptr && str_size > 0)
-			ft_print_message(str_size, static_pid);
+		str_size_ptr = ft_message_length(&str_size, sizeof(int));
+		if (str_size_ptr == true && str_size > 0)
+			ft_print_message(str_size);
 	}
 	return (0);
 }
-

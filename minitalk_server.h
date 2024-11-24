@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 20:43:18 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/15 20:36:45 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/24 06:56:09 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <stdlib.h>
 # include <signal.h>
 # include <string.h>
+# include <stdbool.h>
 # include "libft/libft.h"
 
 #endif
