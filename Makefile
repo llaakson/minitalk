@@ -6,7 +6,7 @@ NAME = $(CLIENT) $(SERVER)
 
 SOURCES =	client.c\
 
-SERVERS =	server.c\
+SERVERS =	server.c server_tools.c\
 
 OBJECTS = $(SOURCES:%.c=%.o)
 

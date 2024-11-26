@@ -1,25 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   minitalk_server.h                                  :+:      :+:    :+:   */
+/*   server_tools.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/04 20:43:18 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/26 16:11:00 by llaakson         ###   ########.fr       */
+/*   Created: 2024/11/26 14:58:19 by llaakson          #+#    #+#             */
+/*   Updated: 2024/11/26 14:59:41 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef MINITALK_SERVER_H
-# define MINITALK_SERVER_H
-# include <stdio.h>
-# include <unistd.h>
-# include <stdlib.h>
-# include <signal.h>
-# include <string.h>
-# include <stdbool.h>
-# include "libft/libft.h"
+#include "minitalk_server.h"
 
-int	set_pid(int spid);
+int	set_pid(int spid)
+{
+	static int	static_pid = 0;
 
-#endif
+	if (spid == -1)
+		return (static_pid);
+	if (static_pid == 0 || spid == 0)
+		static_pid = spid;
+	if (static_pid == spid)
+		return (0);
+	if (static_pid != spid)
+		return (-1);
+	return (static_pid);
+}

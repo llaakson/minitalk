@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 20:43:18 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/15 20:40:14 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/26 16:09:38 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,5 @@
 # include <signal.h>
 # include <string.h>
 # include "libft/libft.h"
-
 
 #endif

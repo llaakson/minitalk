@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/04 15:26:52 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/24 08:26:25 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/26 16:14:18 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,30 @@ static int	g_wait;
 void	send_one_bit(int bit, int id)
 {
 	if (bit == 0)
-		kill(id, SIGUSR2);
+	{
+		if (kill(id, SIGUSR2) == -1)
+		{
+			write(2, "Error sending signal\n", 21);
+			exit (1);
+		}
+	}
 	if (bit == 1)
-		kill(id, SIGUSR1);
+	{
+		if (kill(id, SIGUSR1) == -1)
+		{
+			write(2, "Error sending signal\n", 21);
+			exit (1);
+		}
+	}
 }
 
 int	send_one_byte(int pid, unsigned char byte)
 {
 	int	i;
 	int	bit;
+	int	wait_counter;
 
+	wait_counter = 0;
 	i = 0;
 	while (i < 8)
 	{
@@ -35,13 +49,15 @@ int	send_one_byte(int pid, unsigned char byte)
 		send_one_bit(bit, pid);
 		while (!g_wait)
 		{
-			sleep(20);
-			if (!g_wait)
+			usleep(1000000);
+			if (wait_counter == 50)
 			{
 				write(2, "Time out\n", 9);
 				return (0);
 			}
+			wait_counter++;
 		}
+		wait_counter = 0;
 		i++;
 	}
 	return (1);
@@ -60,6 +76,7 @@ int	start_send(int pid, void *send, int size)
 			return (1);
 		i++;
 	}
+	//g_wait = 0;
 	return (0);
 }
 
@@ -91,13 +108,14 @@ int	main(int argc, char **argv)
 	id = atoi(argv[1]);
 	if (id <= 1)
 	{
-		write(2, "Not valid PID\n", 14);
+		write(2, "Not a valid PID\n", 16);
 		exit (1);
 	}
 	siga.sa_sigaction = ft_signal;
 	siga.sa_flags = SA_RESTART | SA_SIGINFO;
 	sigemptyset(&siga.sa_mask);
 	sigaction(SIGUSR2, &siga, NULL);
+	sigaction(SIGUSR1, &siga, NULL);
 	str_len = ft_strlen(argv[2]);
 	if (start_send(id, &str_len, sizeof(str_len)))
 		exit(1);

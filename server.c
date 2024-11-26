@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/11/19 21:21:54 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/24 08:58:57 by llaakson         ###   ########.fr       */
+/*   Created: 2024/11/26 14:46:09 by llaakson          #+#    #+#             */
+/*   Updated: 2024/11/26 15:43:28 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,41 +14,29 @@
 
 static int	g_signal;
 
-int	set_pid(int spid)
-{
-	static int	static_pid = 0;
-
-	if (spid == -1)
-		return (static_pid);
-	if (static_pid == 0 || spid == 0)
-		static_pid = spid;
-	if (static_pid == spid)
-		return (0);
-	if (static_pid != spid)
-		return (-1);
-	return (static_pid);
-}
-
 int	ft_get_bit(unsigned char *bit)
 {
 	int	i;
-	unsigned char temp_bit;
+	int	wait_counter;
 
+	wait_counter = 0;
 	i = 0;
-	&temp_bit = bit;
 	while (8 > i)
 	{
 		while (!g_signal)
 		{
-			sleep(60);
-			if (!g_signal)
+			usleep(1000000);
+			if (wait_counter == 50)
 				return (0);
+			wait_counter++;
 		}
+		wait_counter = 0;
 		if (g_signal == SIGUSR1)
-			temp_bit |= 1 << (7 - i);
+			*bit |= 1 << (7 - i);
 		i++;
 		g_signal = 0;
-		kill(set_pid(-1), SIGUSR2);
+		if (kill(set_pid(-1), SIGUSR2))
+			write(2, "Error sending signal\n", 21);
 	}
 	return (1);
 }
