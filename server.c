@@ -6,7 +6,7 @@
 /*   By: llaakson <llaakson@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/26 14:46:09 by llaakson          #+#    #+#             */
-/*   Updated: 2024/11/26 15:43:28 by llaakson         ###   ########.fr       */
+/*   Updated: 2024/11/27 11:26:01 by llaakson         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 static int	g_signal;
 
-int	ft_get_bit(unsigned char *bit)
+static int	ft_get_bit(unsigned char *bit)
 {
 	int	i;
 	int	wait_counter;
@@ -35,13 +35,13 @@ int	ft_get_bit(unsigned char *bit)
 			*bit |= 1 << (7 - i);
 		i++;
 		g_signal = 0;
-		if (kill(set_pid(-1), SIGUSR2))
+		if (kill(set_pid(-1), SIGUSR2) == -1)
 			write(2, "Error sending signal\n", 21);
 	}
 	return (1);
 }
 
-bool	ft_message_length(void *str_size, int counter)
+static bool	ft_message_length(void *str_size, int counter)
 {
 	unsigned char	*temp;
 	int				i;
@@ -58,7 +58,7 @@ bool	ft_message_length(void *str_size, int counter)
 	return (true);
 }
 
-void	ft_print_message(int str_size)
+static void	ft_print_message(int str_size)
 {
 	char	*str;
 
@@ -73,7 +73,8 @@ void	ft_print_message(int str_size)
 		free(str);
 		str = NULL;
 		write(2, "Signal lost\n", 12);
-		kill(set_pid(-1), SIGUSR1);
+		if (kill(set_pid(-1), SIGUSR1) == -1)
+			write(2, "Error sending signal\n", 21);
 		return ;
 	}
 	str[str_size] = '\0';
@@ -82,7 +83,7 @@ void	ft_print_message(int str_size)
 	str = NULL;
 }
 
-void	ft_print_signal(int signum, siginfo_t *info, void *context)
+void	ft_signal_handler(int signum, siginfo_t *info, void *context)
 {
 	(void)context;
 	if (!(set_pid(info->si_pid)))
@@ -95,11 +96,13 @@ int	main(void)
 	int					str_size;
 	bool				str_size_ptr;
 
-	siga.sa_sigaction = ft_print_signal;
+	siga.sa_sigaction = ft_signal_handler;
 	siga.sa_flags = SA_SIGINFO;
 	sigemptyset(&siga.sa_mask);
-	sigaction(SIGUSR1, &siga, NULL);
-	sigaction(SIGUSR2, &siga, NULL);
+	if ((sigaction(SIGUSR1, &siga, NULL) == -1))
+		exit(1);
+	if ((sigaction(SIGUSR2, &siga, NULL) == -1))
+		exit(1);
 	ft_printf("%d\n", getpid());
 	while (1)
 	{

@@ -4,7 +4,7 @@ SERVER = server
 
 NAME = $(CLIENT) $(SERVER) 
 
-SOURCES =	client.c\
+SOURCES =	client.c client_tools.c\
 
 SERVERS =	server.c server_tools.c\
 
